@@ -278,8 +278,8 @@
                         </div>
                     </div>
 
-                    <!-- Mis Actividades Guardadas (Debajo del título, con diseño unificado y paginación) -->
-                    <div class="bg-slate-50/80 dark:bg-slate-800/50 rounded-xl p-3.5 border border-slate-200/80 dark:border-slate-700/80 space-y-3">
+                    <!-- Mis Actividades Guardadas (Debajo del título, con buscador sutil, diseño unificado y paginación) -->
+                    <div class="bg-slate-50/80 dark:bg-slate-800/50 rounded-xl p-3.5 border border-slate-200/80 dark:border-slate-700/80 space-y-2.5">
                         <div class="flex items-center justify-between gap-2">
                             <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                                 <i class="fa-solid fa-folder-bookmark text-indigo-500"></i>
@@ -299,6 +299,15 @@
                                 </div>
                                 <span id="savedCountBadge" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">0</span>
                             </div>
+                        </div>
+
+                        <!-- Buscador sutil de actividades guardadas -->
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 dark:text-slate-500 pointer-events-none"></i>
+                            <input id="savedSearchInput" type="text" oninput="handleSavedSearch(this.value)" placeholder="Buscar actividad..." class="w-full pl-7 pr-6 py-1.5 rounded-lg border border-slate-200/90 dark:border-slate-700/90 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                            <button id="btnClearSavedSearch" type="button" onclick="clearSavedSearch()" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-[11px]">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
                         </div>
 
                         <!-- Contenedor de lista de actividades -->
@@ -466,12 +475,6 @@
                     <div id="wordEditorList" class="max-h-72 overflow-y-auto space-y-2 pr-1">
                         <!-- Renderizado dinámicamente -->
                     </div>
-
-                    <!-- Botón Principal de Regeneración -->
-                    <button onclick="regenerateCurrent()" class="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold text-sm shadow-md shadow-indigo-500/20 flex items-center justify-center gap-2 transition transform active:scale-[0.99]">
-                        <i class="fa-solid fa-arrows-rotate"></i>
-                        <span id="uiBtnRegenerate">Regenerar Disposición</span>
-                    </button>
                 </div>
 
             </aside>
@@ -517,6 +520,12 @@
                         <button id="btnHintCrossword" onclick="revealActiveCellLetter()" class="hidden px-3.5 py-2 rounded-xl bg-sky-50 dark:bg-sky-950/50 hover:bg-sky-100 dark:hover:bg-sky-900/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 text-xs font-bold items-center gap-1.5 transition" title="Revelar la letra de la casilla seleccionada">
                             <i class="fa-regular fa-lightbulb"></i>
                             <span id="uiBtnHint">Dar Letra</span>
+                        </button>
+
+                        <!-- Botón Regenerar Disposición (Ubicado aquí para máxima visibilidad) -->
+                        <button onclick="regenerateCurrent()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-xs font-bold shadow-sm shadow-indigo-500/20 flex items-center gap-1.5 transition transform active:scale-[0.99]">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                            <span id="uiBtnRegenerate">Regenerar Disposición</span>
                         </button>
 
                         <!-- Botón Mostrar/Ocultar Solución -->
@@ -675,7 +684,9 @@
                 btnRegenerate: "Regenerar Disposición",
                 savedActivitiesTitle: "Actividades Guardadas",
                 btnSaveActivity: "Guardar",
+                searchSavedPlaceholder: "Buscar actividad...",
                 emptySavedList: "No hay actividades guardadas aún.",
+                noSearchResults: "Sin coincidencias para la búsqueda.",
                 showLabel: "Ver:",
                 pageSizeAll: "Todas",
                 pageOf: "de",
@@ -785,7 +796,9 @@
                 btnRegenerate: "Regenerate Layout",
                 savedActivitiesTitle: "Saved Activities",
                 btnSaveActivity: "Save",
+                searchSavedPlaceholder: "Search activity...",
                 emptySavedList: "No saved activities yet.",
+                noSearchResults: "No matching activities found.",
                 showLabel: "Show:",
                 pageSizeAll: "All",
                 pageOf: "of",
@@ -854,10 +867,11 @@
         let currentTheme = localStorage.getItem('uparpuzzle_theme') || 'light';
         const STORAGE_ACTIVITIES_KEY = 'uparpuzzle_saved_activities_v1';
 
-        // Estado de paginación para actividades guardadas
+        // Estado de paginación y búsqueda para actividades guardadas
         let savedPagination = {
             currentPage: 1,
-            pageSize: 5 // '5' | '10' | '15' | '50' | 'all'
+            pageSize: 5, // '5' | '10' | '15' | '50' | 'all'
+            searchQuery: ''
         };
 
         function t(key) {
@@ -934,6 +948,7 @@
             document.getElementById('uiBtnRegenerate').textContent = t('btnRegenerate');
             document.getElementById('uiSavedActivitiesTitle').textContent = t('savedActivitiesTitle');
             document.getElementById('uiBtnSaveActivity').textContent = t('btnSaveActivity');
+            document.getElementById('savedSearchInput').placeholder = t('searchSavedPlaceholder');
             document.getElementById('uiShowLabel').textContent = t('showLabel');
             document.getElementById('optPageSizeAll').textContent = t('pageSizeAll');
             document.getElementById('uiBtnExportJson').textContent = t('btnExportJson');
@@ -1514,7 +1529,7 @@
         }
 
         /* =========================================================================
-           4. GESTIÓN DE ACTIVIDADES GUARDADAS (CON PAGINACIÓN Y DISEÑO UNIFICADO)
+           4. GESTIÓN DE ACTIVIDADES GUARDADAS (CON BUSCADOR Y PAGINACIÓN)
            ========================================================================= */
         function getSavedActivities() {
             try {
@@ -1543,6 +1558,26 @@
             } catch (e) {
                 return isoDate;
             }
+        }
+
+        function handleSavedSearch(query) {
+            savedPagination.searchQuery = (query || '').trim().toLowerCase();
+            savedPagination.currentPage = 1;
+            const clearBtn = document.getElementById('btnClearSavedSearch');
+            if (clearBtn) {
+                if (savedPagination.searchQuery.length > 0) {
+                    clearBtn.classList.remove('hidden');
+                } else {
+                    clearBtn.classList.add('hidden');
+                }
+            }
+            renderSavedActivitiesList();
+        }
+
+        function clearSavedSearch() {
+            const input = document.getElementById('savedSearchInput');
+            if (input) input.value = '';
+            handleSavedSearch('');
         }
 
         function changeSavedPageSize(newVal) {
@@ -1699,13 +1734,21 @@
             const btnPrev = document.getElementById('btnPrevSavedPage');
             const btnNext = document.getElementById('btnNextSavedPage');
 
-            const activities = getSavedActivities();
-            const total = activities.length;
+            const allActivities = getSavedActivities();
+            badgeEl.textContent = allActivities.length;
 
-            badgeEl.textContent = total;
+            const q = savedPagination.searchQuery;
+            const filteredActivities = q
+                ? allActivities.filter(act =>
+                    (act.name || '').toLowerCase().includes(q) ||
+                    (Array.isArray(act.items) && act.items.some(i => (i.word || '').toLowerCase().includes(q)))
+                  )
+                : allActivities;
 
-            // Mostrar selector de paginación (5, 10, 15, 50, Todas) a partir de más de 5 elementos
-            if (total > 5) {
+            const total = filteredActivities.length;
+
+            // Mostrar selector de paginación (5, 10, 15, 50, Todas) a partir de más de 5 elementos totales
+            if (allActivities.length > 5) {
                 pageSizeWrapper.classList.remove('hidden');
                 pageSizeWrapper.classList.add('flex');
             } else {
@@ -1716,9 +1759,10 @@
             if (total === 0) {
                 paginationControls.classList.add('hidden');
                 paginationControls.classList.remove('flex');
+                const emptyText = allActivities.length === 0 ? t('emptySavedList') : t('noSearchResults');
                 listEl.innerHTML = `
                     <div class="text-center py-3.5 px-3 rounded-lg border border-dashed border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 text-[11px]">
-                        ${t('emptySavedList')}
+                        ${emptyText}
                     </div>
                 `;
                 return;
@@ -1738,7 +1782,7 @@
 
             const startIdx = (savedPagination.currentPage - 1) * effectivePageSize;
             const endIdx = Math.min(startIdx + effectivePageSize, total);
-            const visibleActivities = activities.slice(startIdx, endIdx);
+            const visibleActivities = filteredActivities.slice(startIdx, endIdx);
 
             if (total > 5 && totalPages > 1) {
                 paginationControls.classList.remove('hidden');
