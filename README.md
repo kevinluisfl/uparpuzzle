@@ -43,4 +43,4 @@ El proyecto no requiere instalación de dependencias ni servidores complejos.
 
 1. Clona este repositorio o descarga el archivo `index.html`[cite: 1]:
    ```bash
-   git clone [https://github.com/tu-usuario/uparpuzzle-studio.git](https://github.com/tu-usuario/uparpuzzle-studio.git)
+   git clone [https://github.com/kevinluisfl/uparpuzzle.git](https://github.com/kevinluisfl/uparpuzzle.git)
